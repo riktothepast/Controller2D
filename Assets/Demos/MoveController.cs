@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using raia.characterController;
+using UnityEngine;
 
 public class MoveController : MonoBehaviour
 {
     [SerializeField]
-    float movementSpeed;
+    float movementSpeed = 10f;
     [SerializeField]
-    float gravity;
+    float gravity = 30f;
+    [SerializeField]
+    float jumpHeight = 3f;
     Controller2D controller2D;
     Vector2 velocity;
 
@@ -16,9 +19,9 @@ public class MoveController : MonoBehaviour
 
     void Update()
     {
-        velocity.x = Input.GetAxis("Horizontal");
+        velocity.x = Input.GetAxis("Horizontal") * movementSpeed;
         velocity.y -= gravity * Time.deltaTime;
-        controller2D.Move(velocity * movementSpeed * Time.deltaTime);
+        controller2D.Move(velocity * Time.deltaTime);
         if (controller2D.CollisionState().below)
         {
             velocity.y = 0;
@@ -31,6 +34,6 @@ public class MoveController : MonoBehaviour
 
     void Jump()
     {
-        velocity.y = Mathf.Sqrt(gravity);
+        velocity.y = Mathf.Sqrt(2f * jumpHeight * gravity);
     }
 }
