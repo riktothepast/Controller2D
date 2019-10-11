@@ -14,4 +14,4 @@ public CollisionState CollisionState()
 ```
 A Struct that provides collision information from last frame, will provide collision data for `above`, `below`, `left` and `right` collisions.
 
-[![Controller2D Video](http://img.youtube.com/vi/nLRZcDY5ROs/0.jpg)](http://www.youtube.com/watch?v=nLRZcDY5ROs "Controller2D")
+![Controller2D](https://github.com/riktothepast/Controller2D/blob/master/ccMovement.gif)
