@@ -18,6 +18,8 @@ namespace raia.characterController
         protected BoxCollider2D boxCollider2D;
         private CollisionState collisionState, lastCollisionState;
         private Bounds boundingBox;
+        public delegate void TriggerEvent(Collider2D collision);
+        public TriggerEvent onTriggerEnter, onTriggerStay, onTriggerExit;
 
         void Awake()
         {
@@ -28,12 +30,12 @@ namespace raia.characterController
             boundingBox.Expand(-2f * skinWidth);
         }
 
-        protected RaycastHit2D CastBox(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask, float angle = 0f)
+        protected RaycastHit2D CastBox(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask)
         {
             Vector2 compensatedOrigin = new Vector2(origin.x - size.x * 0.5f, origin.y + size.y * 0.5f);
             DebugDrawRectangle(compensatedOrigin, size, Color.red);
             DebugDrawRectangle(compensatedOrigin + direction * distance, size, Color.red);
-            RaycastHit2D hit = Physics2D.BoxCast(origin, size, angle, direction, distance, mask);
+            RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0, direction, distance, mask);
             if (hit)
             {
                 Vector2 newOrigin = new Vector2(hit.centroid.x - size.x * 0.5f, hit.centroid.y + size.y * 0.5f);
@@ -143,6 +145,21 @@ namespace raia.characterController
             Debug.DrawLine(position, new Vector3(position.x, position.y - size.y, position.z), color);
             Debug.DrawLine(new Vector3(position.x, position.y - size.y, position.z), new Vector3(position.x + size.x, position.y - size.y, position.z), color);
             Debug.DrawLine(new Vector3(position.x + size.x, position.y - size.y, position.z), new Vector3(position.x + size.x, position.y, position.z), color);
+        }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            onTriggerEnter?.Invoke(collision);
+        }
+
+        private void OnTriggerStay2D(Collider2D collision)
+        {
+            onTriggerStay?.Invoke(collision);
+        }
+
+        private void OnTriggerExit2D(Collider2D collision)
+        {
+            onTriggerExit?.Invoke(collision);
         }
     }
 }
