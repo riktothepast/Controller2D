@@ -15,6 +15,12 @@ public class MoveController : MonoBehaviour
     private void Awake()
     {
         controller2D = GetComponent<Controller2D>();
+        controller2D.onTriggerEnter += OnTriggerEnter2D;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Destroy(collision.gameObject);
     }
 
     void Update()
