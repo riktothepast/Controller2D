@@ -1,6 +1,7 @@
 ﻿using raia.characterController;
 using UnityEngine;
 
+[RequireComponent(typeof(Controller2D))]
 public class MoveController : MonoBehaviour
 {
     [SerializeField]
