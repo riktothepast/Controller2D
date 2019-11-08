@@ -24,10 +24,9 @@ namespace raia.characterController
         void Awake()
         {
             boxCollider2D = GetComponent<BoxCollider2D>();
-            boundingBox = new Bounds(Vector3.zero, boxCollider2D.size);
             collisionState = lastCollisionState = new CollisionState();
             collisionState.Reset();
-            boundingBox.Expand(-2f * skinWidth);
+            UpdateCollisionBoundaries();
         }
 
         protected RaycastHit2D CastBox(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask)
@@ -137,6 +136,12 @@ namespace raia.characterController
         public CollisionState CollisionState()
         {
             return collisionState;
+        }
+
+        public void UpdateCollisionBoundaries()
+        {
+            boundingBox = new Bounds(Vector3.zero, boxCollider2D.size);
+            boundingBox.Expand(-2f * skinWidth);
         }
 
         private void DebugDrawRectangle(Vector3 position, Vector2 size, Color color)
