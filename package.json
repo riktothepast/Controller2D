@@ -1,0 +1,19 @@
+{
+    "name": "raia.controller",
+    "displayName": "Controller2D",
+    "version": "1.0.0",
+    "unity": "2019.1",
+    "description": "A simple Character Controller for 2D games that require tight movement. It requieres a BoxCollider2D.",
+    "keywords": [
+        "character",
+        "controller",
+        "2d",
+        "physics-less"
+    ],
+    "category": "2D",
+    "dependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/riktothepast/Controller2D"
+    }
+}
