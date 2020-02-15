@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace raia.characterController
+namespace net.fiveotwo.characterController
 {
     [RequireComponent(typeof(BoxCollider2D))]
     public class Controller2D : MonoBehaviour

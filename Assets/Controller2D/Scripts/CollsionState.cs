@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace raia.characterController
+namespace net.fiveotwo.characterController
 {
     public struct CollisionState
     {
