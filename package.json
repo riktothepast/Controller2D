@@ -1,7 +1,7 @@
 {
-    "name": "net.fiveotwo.characterController",
+    "name": "net.fiveotwo.character-controller",
     "displayName": "Character Controller 2D",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "unity": "2019.1",
     "description": "A simple Character Controller for 2D games that require tight movement. It requires a BoxCollider2D.",
     "keywords": [
