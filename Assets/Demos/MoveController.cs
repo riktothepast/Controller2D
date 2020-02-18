@@ -10,6 +10,10 @@ public class MoveController : MonoBehaviour
     float gravity = 30f;
     [SerializeField]
     float jumpHeight = 3f;
+    [SerializeField]
+    float groundDamping = 10f;
+    [SerializeField]
+    float airDamping = 5f;
     Controller2D controller2D;
     Vector2 velocity;
 
@@ -26,12 +30,17 @@ public class MoveController : MonoBehaviour
 
     void Update()
     {
-        velocity.x = Input.GetAxis("Horizontal") * movementSpeed;
+        float damping = controller2D.CollisionState().below ? groundDamping : airDamping;
+        velocity.x = Mathf.Lerp(velocity.x, Input.GetAxis("Horizontal") * movementSpeed, Time.deltaTime * damping);
         velocity.y -= gravity * Time.deltaTime;
         controller2D.Move(velocity * Time.deltaTime);
         if (controller2D.CollisionState().below)
         {
             velocity.y = 0;
+        }
+        if (controller2D.CollisionState().left || controller2D.CollisionState().right)
+        {
+            velocity.x = 0;
         }
         if (controller2D.CollisionState().below && Input.GetKeyDown(KeyCode.Space))
         {
