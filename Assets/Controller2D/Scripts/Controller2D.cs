@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace raia.characterController
+namespace net.fiveotwo.characterController
 {
     [RequireComponent(typeof(BoxCollider2D))]
     public class Controller2D : MonoBehaviour
@@ -18,13 +18,11 @@ namespace raia.characterController
         [SerializeField]
         [Range(10f, 90f)]
         protected float maxSlopeAngle = 45f;
-        protected float stepsMaximumHeight = 0.01f;
         [SerializeField]
         protected bool logCollisions = false;
         protected BoxCollider2D boxCollider2D;
         private CollisionState collisionState, lastCollisionState;
         private Bounds boundingBox;
-        private Vector2 lastStep;
         public delegate void TriggerEvent(Collider2D collision);
         public TriggerEvent onTriggerEnter, onTriggerStay, onTriggerExit;
 
@@ -59,39 +57,43 @@ namespace raia.characterController
             return value;
         }
 
-        private void VerticalCollision(Vector2 deltaStep, Bounds boundingBox, out float step, out float angle)
-        {
-            float direction = Mathf.Sign(deltaStep.y);
-            float castLength = CastLenght(Mathf.Abs(deltaStep.y));
+        private RaycastHit2D VerticalCast(float lenght, Bounds boundingBox) {
+            float direction = Mathf.Sign(lenght);
+            float castLength = CastLenght(Mathf.Abs(lenght));
             float extends = boundingBox.extents.y;
             float halfExtends = boundingBox.extents.y * 0.5f;
             float initialDistance = halfExtends * direction;
             Vector2 size = new Vector2(boundingBox.size.x, extends + skinWidth);
-            RaycastHit2D hit = CastBox(transform.position + new Vector3(0, initialDistance), size, Vector2.up * direction, castLength, solidMask);
 
-            if (!hit)
+            return CastBox(transform.position + new Vector3(0, initialDistance), size, Vector2.up * direction, castLength, solidMask);
+        }
+
+        private void VerticalCollision(ref Vector3 deltaStep, Bounds boundingBox)
+        {
+            float direction = Mathf.Sign(deltaStep.y);
+            RaycastHit2D hit = VerticalCast(deltaStep.y, boundingBox);
+            if (hit)
             {
-                step = deltaStep.y;
-                angle = 0;
-            } else
-            {
-                collisionState.above = direction > 0 ? true : false;
-                collisionState.below = direction < 0 ? true : false;
-
-                angle = Vector2.Angle(hit.normal, Vector3.up);
-
                 float distance = hit.distance * direction;
                 if (Mathf.Abs(distance) < minimumMoveDistance)
                 {
-                    step = 0;
+                    deltaStep.y = 0;
                 }
                 float compensatedDistance = distance + skinWidth * direction;
 
-                step = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
+                deltaStep.y = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
+
+                if (collisionState.onSlopeAsc)
+                {
+                    deltaStep.x = deltaStep.y / Mathf.Tan(collisionState.slopeAngle * Mathf.Deg2Rad) * Mathf.Sign(deltaStep.x);
+                }
+
+                collisionState.above = direction > 0 ? true : false;
+                collisionState.below = direction < 0 ? true : false;
             }
         }
 
-        private void HorizontalCollision(Vector2 deltaStep, Bounds boundingBox, out float step, out float angle)
+        private void HorizontalCollision(ref Vector3 deltaStep, Bounds boundingBox)
         {
             float direction = Mathf.Sign(deltaStep.x);
             float castLength = CastLenght(Mathf.Abs(deltaStep.x));
@@ -100,109 +102,102 @@ namespace raia.characterController
             float halfExtends = extends * 0.5f;
             float initialDistance = halfExtends * direction;
             float edgeY = transform.position.y - extendsY;
-            Vector2 size = new Vector2(extends + skinWidth, boundingBox.size.y - skinWidth);
+            Vector2 size = new Vector2(extends + skinWidth, boundingBox.size.y);
             RaycastHit2D hit = CastBox(transform.position + new Vector3(initialDistance, 0), size, Vector2.right * direction, castLength, solidMask);
 
-            if (!hit)
+            if (hit)
             {
-                step = deltaStep.x;
-                angle = 0;
-            } else
-            {
-                collisionState.right = direction > 0 ? true : false;
-                collisionState.left = direction < 0 ? true : false;
-
-                angle = Vector2.Angle(hit.normal, Vector3.up);
-
+                if (manageSlopes)
+                {
+                    float angle = Vector2.Angle(hit.normal, Vector3.up);
+                    if (angle <= maxSlopeAngle)
+                    {
+                        Climb(ref deltaStep, angle);
+                    }
+                }
                 float distance = (hit.distance * direction);
 
                 if (Mathf.Abs(distance) < minimumMoveDistance)
                 {
-                    step = 0;
+                    deltaStep.x = 0;
                 }
                 float compensatedDistance = distance + skinWidth * direction;
 
-                step = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
+                deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
+                if (!collisionState.onSlopeAsc)
+                {
+                    collisionState.right = direction > 0 ? true : false;
+                    collisionState.left = direction < 0 ? true : false;
+                }
             }
         }
-
-        private void DiagonalCollision(Vector2 deltaStep, Bounds boundingBox, float movingAngle, out Vector2 step)
+        
+        private void Climb(ref Vector3 deltaStep, float slopeAngle)
         {
+            float moveDistance = Mathf.Abs(deltaStep.x);
             float direction = Mathf.Sign(deltaStep.x);
-            float castLength = CastLenght(Mathf.Abs(deltaStep.x));
-            float extends = boundingBox.extents.x;
-            float extendsY = boundingBox.extents.y;
-            float halfExtends = extends * 0.5f;
-            float halfExtendsY = extendsY * 0.5f;
-            float initialDistance = extends * direction;
-            float edgeY = transform.position.y - extendsY;
-            float edgeX = transform.position.x + extends * direction;
-            float edgeCompensatedX = transform.position.x + halfExtends * direction;
-            float edgeCompensatedY = transform.position.y - halfExtendsY;
-            Vector2 size = new Vector2(boundingBox.size.x - skinWidth, boundingBox.size.y - skinWidth);
-            size *= 0.9f;
-            Vector3 directionVector = Quaternion.AngleAxis(movingAngle * direction, Vector3.forward) * (Vector2.right * direction);
+            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad) * moveDistance;
 
-            for (float y = 0; y < 3; y ++) {
-                Debug.DrawRay(new Vector2(edgeCompensatedX, edgeY + y * skinWidth), (Vector2.right * direction), Color.magenta);
-                RaycastHit2D ray = Physics2D.Raycast(new Vector2(edgeCompensatedX, edgeY + y * skinWidth), (Vector2.right * direction), boundingBox.size.x, solidMask);
-                if (ray)
-                {
-                    Vector2 newPos = transform.position;
-                    newPos.y = ray.point.y + extendsY + skinWidth;
-                    newPos.x = ray.point.x - ((extends + skinWidth) * direction);
-                    transform.position = newPos;
-                    collisionState.below = true;
-                }
-            }
-            RaycastHit2D hit = CastBox(transform.position + new Vector3(0, skinWidth), size, directionVector, castLength, solidMask, movingAngle);
-            if (!hit)
+            if (deltaStep.y <= climbVelocityY)
             {
-                step = Quaternion.AngleAxis(movingAngle * direction, Vector3.forward) * deltaStep;
-                step.y += skinWidth;
-            } else {
-                float distance = (hit.distance * direction);
-                if (Mathf.Abs(distance) < minimumMoveDistance)
-                {
-                    step = Vector2.zero;
-                }
-                float compensatedDistance = distance + skinWidth * direction;
-                float newDistance = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
-                step = Quaternion.AngleAxis(movingAngle * direction, Vector3.forward) * (Vector2.right * direction * newDistance);
-                step.y += skinWidth;
+                deltaStep.y = climbVelocityY;
+                deltaStep.x = Mathf.Cos(slopeAngle * Mathf.Deg2Rad) * moveDistance * direction;
+                collisionState.below = collisionState.onSlopeAsc = true;
+                collisionState.slopeAngle = slopeAngle;
             }
         }
 
-        public Vector2 Move(Vector3 deltaStep)
+        private void Decend(ref Vector3 deltaStep)
         {
-            bool noCollisionLastTime = lastCollisionState.NoCollision();
+            float moveDistance = Mathf.Abs(deltaStep.x);
+            float directionX = Mathf.Sign(deltaStep.x);
+            if (manageSlopes)
+            {
+                RaycastHit2D hit = VerticalCast(-Mathf.Infinity, boundingBox);
+
+                if (hit)
+                {
+                    float slopeAngle = Vector2.Angle(hit.normal, Vector3.up);
+                    float descendVelocity = Mathf.Cos(slopeAngle * Mathf.Deg2Rad) * moveDistance;
+                    if (slopeAngle != 0)
+                    {
+                        if (hit.distance - skinWidth <= Mathf.Tan(slopeAngle * Mathf.Deg2Rad) * moveDistance)
+                        {
+                            deltaStep.x = Mathf.Cos(slopeAngle * Mathf.Deg2Rad) * moveDistance * directionX;
+                            deltaStep.y -= Mathf.Sin(slopeAngle * Mathf.Deg2Rad) * moveDistance;
+                            collisionState.onSlopeDesc = collisionState.below = true;
+                            collisionState.slopeAngle = slopeAngle;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void Move(Vector3 deltaStep)
+        {
             collisionState.Reset();
 
-            if (deltaStep.y != 0)
-            {
-                VerticalCollision(deltaStep, boundingBox, out float step, out float angle);
-                transform.Translate(new Vector3(0, step));
+            if (deltaStep.y < 0) {
+                Decend(ref deltaStep);
             }
 
             if (deltaStep.x != 0)
             {
-                HorizontalCollision(deltaStep, boundingBox, out float step, out float angle);
-                if (manageSlopes && angle != 0 && angle <= maxSlopeAngle)
-                {
-                    DiagonalCollision(deltaStep, boundingBox, angle, out Vector2 resultStep);
-                    transform.Translate(resultStep);
-                } else {
-                    transform.Translate(new Vector3(step, 0));
-                }
+                HorizontalCollision(ref deltaStep, boundingBox);
+                transform.Translate(Vector2.right * deltaStep);
             }
 
+            if (deltaStep.y != 0)
+            {
+                VerticalCollision(ref deltaStep, boundingBox);
+                transform.Translate(Vector2.up * deltaStep);
+            }
+            
             lastCollisionState = collisionState;
             if (logCollisions)
             {
                 collisionState.Log();
             }
-
-            return lastStep;
         }
 
         public CollisionState CollisionState()

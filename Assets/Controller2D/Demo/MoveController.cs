@@ -1,4 +1,4 @@
-﻿using raia.characterController;
+﻿using net.fiveotwo.characterController;
 using UnityEngine;
 
 [RequireComponent(typeof(Controller2D))]

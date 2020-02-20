@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace raia.characterController
+namespace net.fiveotwo.characterController
 {
     public struct CollisionState
     {
@@ -8,10 +8,14 @@ namespace raia.characterController
         public bool below;
         public bool left;
         public bool right;
+        public bool onSlopeAsc;
+        public bool onSlopeDesc;
+        public float slopeAngle;
 
         public void Reset()
         {
-            above = below = left = right = false;
+            above = below = left = right = onSlopeAsc = onSlopeDesc = false;
+            slopeAngle = 0;
         }
 
         public bool NoCollision()
