@@ -26,6 +26,7 @@ namespace net.fiveotwo.characterController
         protected bool logCollisions = false;
 
         private BoxCollider2D _boxCollider2D;
+        private Vector3 _colliderOffset;
         private CollisionState _collisionState, _lastCollisionState;
         private Bounds _boundingBox;
 
@@ -36,6 +37,8 @@ namespace net.fiveotwo.characterController
             _collisionState.Reset();
             UpdateCollisionBoundaries();
         }
+
+        private Vector2 Position() => transform.position + _colliderOffset;
 
         private RaycastHit2D CastBox(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask, float angle = 0)
         {
@@ -68,7 +71,7 @@ namespace net.fiveotwo.characterController
             float initialDistance = halfExtends * direction;
             Vector2 size = new Vector2(boundingBox.size.x, extends + skinWidth);
 
-            return CastBox(transform.position + new Vector3(0, initialDistance), size, Vector2.up * direction, castLength, solidMask);
+            return CastBox(Position() + new Vector2(0, initialDistance), size, Vector2.up * direction, castLength, solidMask);
         }
 
         private void VerticalCollision(ref Vector3 deltaStep, Bounds boundingBox)
@@ -104,7 +107,7 @@ namespace net.fiveotwo.characterController
             float halfExtends = extends * 0.5f;
             float initialDistance = halfExtends * direction;
             Vector2 size = new Vector2(extends + skinWidth, boundingBox.size.y);
-            RaycastHit2D hit = CastBox(transform.position + new Vector3(initialDistance, 0), size, Vector2.right * direction, castLength, solidMask);
+            RaycastHit2D hit = CastBox(Position() + new Vector2(initialDistance, 0), size, Vector2.right * direction, castLength, solidMask);
 
             if (hit)
             {
@@ -159,7 +162,7 @@ namespace net.fiveotwo.characterController
                 if (hit)
                 {
                     float slopeAngle = Vector2.Angle(hit.normal, Vector3.up);
-                    if (Math.Abs(slopeAngle) > Mathf.Epsilon)
+                    if (slopeAngle <= maxSlopeAngle)
                     {
                         if (hit.distance - skinWidth <= Mathf.Tan(slopeAngle * Mathf.Deg2Rad) * moveDistance)
                         {
@@ -209,6 +212,7 @@ namespace net.fiveotwo.characterController
         {
             _boundingBox = new Bounds(Vector3.zero, _boxCollider2D.size);
             _boundingBox.Expand(-2f * skinWidth);
+            _colliderOffset = _boxCollider2D.offset;
         }
 
         private static void DebugDrawRectangle(Vector3 position, Vector2 size, Color color)
