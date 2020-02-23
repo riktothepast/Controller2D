@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace net.fiveotwo.characterController
 {
-    [RequireComponent(typeof(BoxCollider2D))]
+    [RequireComponent(typeof(Collider2D))]
     public class Controller2D : MonoBehaviour
     {
         public delegate void TriggerEvent(Collider2D collision);
@@ -25,7 +25,9 @@ namespace net.fiveotwo.characterController
         [SerializeField]
         protected bool logCollisions;
 
-        private BoxCollider2D _boxCollider2D;
+        private Collider2D _collider2D;
+        private CapsuleDirection2D _capsuleDirection2D;
+        private bool _isCapsuleCollider;
         private Vector3 _colliderOffset;
         private CollisionState _collisionState;
         private Bounds _boundingBox;
@@ -34,18 +36,25 @@ namespace net.fiveotwo.characterController
 
         protected void Awake()
         {
-            _boxCollider2D = GetComponent<BoxCollider2D>();
+            _collider2D = GetComponent<Collider2D>();
+            _isCapsuleCollider = (_collider2D.GetType() == typeof(CapsuleCollider2D));
+            if (_isCapsuleCollider) {
+                _capsuleDirection2D = ((CapsuleCollider2D)_collider2D).direction;
+            }
             _collisionState = new CollisionState();
             _collisionState.Reset();
             UpdateCollisionBoundaries();
         }
 
-        private RaycastHit2D CastBox(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask, float angle = 0)
+        private RaycastHit2D Cast(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask, float angle = 0)
         {
             Vector2 compensatedOrigin = new Vector2(origin.x - size.x * 0.5f, origin.y + size.y * 0.5f);
             DebugDrawRectangle(compensatedOrigin, size, Math.Abs(angle) > Mathf.Epsilon ? Color.yellow : Color.red);
             DebugDrawRectangle(compensatedOrigin + direction * distance, size, Math.Abs(angle) > Mathf.Epsilon ? Color.yellow : Color.red);
-            RaycastHit2D hit = Physics2D.BoxCast(origin, size, angle, direction, distance, mask);
+            RaycastHit2D hit = _isCapsuleCollider ?
+                Physics2D.CapsuleCast(origin, size, _capsuleDirection2D, angle, direction, distance, mask) :
+                Physics2D.BoxCast(origin, size, angle, direction, distance, mask);
+
             if (hit)
             {
                 Vector2 newOrigin = new Vector2(hit.centroid.x - size.x * 0.5f, hit.centroid.y + size.y * 0.5f);
@@ -66,12 +75,8 @@ namespace net.fiveotwo.characterController
         private RaycastHit2D VerticalCast(float length, Bounds boundingBox) {
             float direction = Mathf.Sign(length);
             float castLength = CastLength(Mathf.Abs(length));
-            float extends = boundingBox.extents.y;
-            float halfExtends = boundingBox.extents.y * 0.5f;
-            float initialDistance = halfExtends * direction;
-            Vector2 size = new Vector2(boundingBox.size.x, extends + skinWidth);
 
-            return CastBox(Position + new Vector2(0, initialDistance), size, Vector2.up * direction, castLength, solidMask);
+            return Cast(Position + new Vector2(0, skinWidth * direction), boundingBox.size, Vector2.up * direction, castLength, solidMask);
         }
 
         private void VerticalCollision(ref Vector3 deltaStep, Bounds boundingBox)
@@ -103,11 +108,7 @@ namespace net.fiveotwo.characterController
         {
             float direction = Mathf.Sign(deltaStep.x);
             float castLength = CastLength(Mathf.Abs(deltaStep.x));
-            float extends = boundingBox.extents.x;
-            float halfExtends = extends * 0.5f;
-            float initialDistance = halfExtends * direction;
-            Vector2 size = new Vector2(extends + skinWidth, boundingBox.size.y);
-            RaycastHit2D hit = CastBox(Position + new Vector2(initialDistance, 0), size, Vector2.right * direction, castLength, solidMask);
+            RaycastHit2D hit = Cast(Position + new Vector2(direction * skinWidth, 0), boundingBox.size, Vector2.right * direction, castLength, solidMask);
 
             if (hit)
             {
@@ -209,9 +210,9 @@ namespace net.fiveotwo.characterController
 
         private void UpdateCollisionBoundaries()
         {
-            _boundingBox = new Bounds(Vector3.zero, _boxCollider2D.size);
+            _boundingBox = new Bounds(Vector3.zero, _collider2D.bounds.size);
             _boundingBox.Expand(-2f * skinWidth);
-            _colliderOffset = _boxCollider2D.offset;
+            _colliderOffset = _collider2D.offset;
         }
 
         private static void DebugDrawRectangle(Vector3 position, Vector2 size, Color color)
