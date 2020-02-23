@@ -3,7 +3,7 @@
 A simple Character Controller for 2D games that require tight movement. It requieres a Collider2D.
 
 ##### Collider type #####
-By default the collision shape to cast against the environment will be a square based on the bounds of the `Collider` attached to the game object. I you set a `Capsule Collider 2D` the controller will use a `Capsule` to check for collisions.
+By default the collision shape to cast against the environment will be a square based on the bounds of the `Collider` attached to the game object. If you set a `Capsule Collider 2D` the controller will use a `Capsule` to check for collisions.
 
 ##### Solid Mask #####
 Defines the layer masks on which the controller should check for collisions.
