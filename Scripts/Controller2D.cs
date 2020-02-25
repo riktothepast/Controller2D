@@ -69,7 +69,7 @@ namespace net.fiveotwo.characterController
             {
                 return 2 * skinWidth;
             }
-            return value;
+            return value + skinWidth;
         }
 
         private RaycastHit2D VerticalCast(float length, Bounds boundingBox) {
@@ -120,17 +120,16 @@ namespace net.fiveotwo.characterController
                         Climb(ref deltaStep, angle);
                     }
                 }
-                float distance = (hit.distance * direction);
-
-                if (Mathf.Abs(distance) < minimumMoveDistance)
-                {
-                    deltaStep.x = 0;
-                }
-                float compensatedDistance = distance + skinWidth * direction;
-
-                deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                 if (!_collisionState.IsAscendingSlope)
                 {
+                    float distance = (hit.distance * direction);
+                    if (Mathf.Abs(distance) < minimumMoveDistance)
+                    {
+                        deltaStep.x = 0;
+                    }
+                    float compensatedDistance = distance + skinWidth * direction;
+
+                    deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                     _collisionState.Right = direction > 0;
                     _collisionState.Left = direction < 0;
                 }
@@ -188,15 +187,21 @@ namespace net.fiveotwo.characterController
             if (Math.Abs(deltaStep.x) > Mathf.Epsilon)
             {
                 HorizontalCollision(ref deltaStep, _boundingBox);
-                transform.Translate(Vector2.right * deltaStep);
+                if (!_collisionState.IsAscendingSlope) {
+                    transform.Translate(Vector2.right * deltaStep);
+                }
             }
 
             if (Math.Abs(deltaStep.y) > Mathf.Epsilon)
             {
                 VerticalCollision(ref deltaStep, _boundingBox);
+                if (_collisionState.IsAscendingSlope)
+                {
+                    transform.Translate(Vector2.right * deltaStep);
+                }
                 transform.Translate(Vector2.up * deltaStep);
             }
-            
+
             if (logCollisions)
             {
                 _collisionState.Log();
