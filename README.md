@@ -2,6 +2,16 @@
 
 A simple Character Controller for 2D games that require tight movement. It requieres a Collider2D.
 
+**Notice**: Although the project is on a higher version of Unity, the scripts should be compatible with any 2018 or 2019 version of Unity.
+
+##### Usage #######
+
+You can add the add this controller through the Unity Package Manager using this repository URL + the specific version you want, you can check the different versions under the tags of the repo. For example:
+
+```C#
+https://github.com/502Studios/Controller2D.git#1.2.0
+```
+
 ##### Collider type #####
 By default the collision shape to cast against the environment will be a square based on the bounds of the `Collider` attached to the game object. If you set a `Capsule Collider 2D` the controller will use a `Capsule` to check for collisions.
 
