@@ -32,7 +32,8 @@ namespace net.fiveotwo.characterController
             Debug.Log("Above: <color=" + GetColor(Above) + ">" + Above + "</color>"
                 + ", Below: <color=" + GetColor(Below) + ">" + Below + "</color>"
                 + ", Left: <color=" + GetColor(Left) + ">" + Left + "</color>"
-                + ", Right: <color=" + GetColor(Right) + ">" + Right + "</color>");
+                + ", Right: <color=" + GetColor(Right) + ">" + Right + "</color>"
+                + ", IsAscendingSlope: <color=" + GetColor(IsAscendingSlope) + ">" + IsAscendingSlope + "</color>");
         }
     }
 }

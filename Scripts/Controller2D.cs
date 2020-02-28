@@ -194,11 +194,13 @@ namespace net.fiveotwo.characterController
 
             if (Math.Abs(deltaStep.y) > Mathf.Epsilon)
             {
+                float previousVerticalSpeed = deltaStep.y;
                 VerticalCollision(ref deltaStep, _boundingBox);
                 if (_collisionState.IsAscendingSlope)
                 {
                     transform.Translate(Vector2.right * deltaStep);
                 }
+                deltaStep.y = previousVerticalSpeed > deltaStep.y ? previousVerticalSpeed : deltaStep.y;
                 transform.Translate(Vector2.up * deltaStep);
             }
 
