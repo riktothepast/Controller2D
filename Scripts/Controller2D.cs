@@ -8,7 +8,7 @@ namespace net.fiveotwo.characterController
     {
         public delegate void TriggerEvent(Collider2D collision);
         public TriggerEvent onTriggerEnter, onTriggerStay, onTriggerExit;
-        
+
         [SerializeField]
         [Range(0.01f, 0.05f)]
         protected float skinWidth = 0.01f;
@@ -31,14 +31,15 @@ namespace net.fiveotwo.characterController
         private Vector3 _colliderOffset;
         private CollisionState _collisionState;
         private Bounds _boundingBox;
-        
+
         private Vector2 Position => transform.position + _colliderOffset;
 
         protected void Awake()
         {
             _collider2D = GetComponent<Collider2D>();
             _isCapsuleCollider = (_collider2D.GetType() == typeof(CapsuleCollider2D));
-            if (_isCapsuleCollider) {
+            if (_isCapsuleCollider)
+            {
                 _capsuleDirection2D = ((CapsuleCollider2D)_collider2D).direction;
             }
             _collisionState = new CollisionState();
@@ -72,7 +73,8 @@ namespace net.fiveotwo.characterController
             return value + skinWidth;
         }
 
-        private RaycastHit2D VerticalCast(float length, Bounds boundingBox) {
+        private RaycastHit2D VerticalCast(float length, Bounds boundingBox)
+        {
             float direction = Mathf.Sign(length);
             float castLength = CastLength(Mathf.Abs(length));
 
@@ -89,16 +91,15 @@ namespace net.fiveotwo.characterController
                 if (Mathf.Abs(distance) < minimumMoveDistance)
                 {
                     deltaStep.y = 0;
+                } else
+                {
+                    float compensatedDistance = distance + skinWidth * direction;
+                    deltaStep.y = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                 }
-                float compensatedDistance = distance + skinWidth * direction;
-
-                deltaStep.y = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
-
                 if (_collisionState.IsAscendingSlope)
                 {
                     deltaStep.x = deltaStep.y / Mathf.Tan(_collisionState.SlopeAngle * Mathf.Deg2Rad) * Mathf.Sign(deltaStep.x);
                 }
-
                 _collisionState.Above = direction > 0;
                 _collisionState.Below = direction < 0;
             }
@@ -126,16 +127,17 @@ namespace net.fiveotwo.characterController
                     if (Mathf.Abs(distance) < minimumMoveDistance)
                     {
                         deltaStep.x = 0;
+                    } else
+                    {
+                        float compensatedDistance = distance + skinWidth * direction;
+                        deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                     }
-                    float compensatedDistance = distance + skinWidth * direction;
-
-                    deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                     _collisionState.Right = direction > 0;
                     _collisionState.Left = direction < 0;
                 }
             }
         }
-        
+
         private void Climb(ref Vector3 deltaStep, float slopeAngle)
         {
             float moveDistance = Mathf.Abs(deltaStep.x);
@@ -180,14 +182,16 @@ namespace net.fiveotwo.characterController
         {
             _collisionState.Reset();
 
-            if (deltaStep.y < 0) {
+            if (deltaStep.y < 0)
+            {
                 Descend(ref deltaStep);
             }
 
             if (Math.Abs(deltaStep.x) > Mathf.Epsilon)
             {
                 HorizontalCollision(ref deltaStep, _boundingBox);
-                if (!_collisionState.IsAscendingSlope) {
+                if (!_collisionState.IsAscendingSlope)
+                {
                     transform.Translate(Vector2.right * deltaStep);
                 }
             }
@@ -200,7 +204,8 @@ namespace net.fiveotwo.characterController
                 {
                     transform.Translate(Vector2.right * deltaStep);
                 }
-                deltaStep.y = previousVerticalSpeed > deltaStep.y ? previousVerticalSpeed : deltaStep.y;
+                bool slopeConditions = _collisionState.IsAscendingSlope && Mathf.Abs(previousVerticalSpeed) > Mathf.Abs(deltaStep.y);
+                deltaStep.y = slopeConditions ? previousVerticalSpeed : deltaStep.y;
                 transform.Translate(Vector2.up * deltaStep);
             }
 
