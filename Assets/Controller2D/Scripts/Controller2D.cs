@@ -7,7 +7,9 @@ namespace net.fiveotwo.characterController
     public class Controller2D : MonoBehaviour
     {
         public delegate void TriggerEvent(Collider2D collision);
+        public delegate void CollisionEvent(RaycastHit2D hit);
         public TriggerEvent onTriggerEnter, onTriggerStay, onTriggerExit;
+        public CollisionEvent onCollisionEvent;
 
         [SerializeField]
         [Range(0.01f, 0.05f)]
@@ -93,7 +95,7 @@ namespace net.fiveotwo.characterController
                     deltaStep.y = 0;
                 } else
                 {
-                    float compensatedDistance = distance + skinWidth * direction;
+                    float compensatedDistance = distance - skinWidth * direction;
                     deltaStep.y = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                 }
                 if (_collisionState.IsAscendingSlope)
@@ -102,6 +104,7 @@ namespace net.fiveotwo.characterController
                 }
                 _collisionState.Above = direction > 0;
                 _collisionState.Below = direction < 0;
+                onCollisionEvent?.Invoke(hit);
             }
         }
 
@@ -129,11 +132,12 @@ namespace net.fiveotwo.characterController
                         deltaStep.x = 0;
                     } else
                     {
-                        float compensatedDistance = distance + skinWidth * direction;
+                        float compensatedDistance = distance - skinWidth * direction;
                         deltaStep.x = Mathf.Abs(compensatedDistance) < Mathf.Abs(distance) ? compensatedDistance : distance;
                     }
                     _collisionState.Right = direction > 0;
                     _collisionState.Left = direction < 0;
+                    onCollisionEvent?.Invoke(hit);
                 }
             }
         }
