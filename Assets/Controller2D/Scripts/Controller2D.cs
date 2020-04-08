@@ -15,10 +15,10 @@ namespace net.fiveotwo.characterController
         private Vector2 Position => transform.position + _colliderOffset;
 
         [SerializeField]
-        [Range(0.01f, 0.1f)]
+        [Range(0.01f, 1f)]
         protected float skinWidth = 0.01f;
         [SerializeField]
-        [Range(0.001f, 0.1f)]
+        [Range(0.001f, 0.5f)]
         protected float minimumMoveDistance = 0.001f;
         [SerializeField]
         protected LayerMask solidMask;
