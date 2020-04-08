@@ -10,9 +10,12 @@ namespace net.fiveotwo.characterController
         public delegate void CollisionEvent(RaycastHit2D hit);
         public TriggerEvent onTriggerEnter, onTriggerStay, onTriggerExit;
         public CollisionEvent onCollisionEvent;
+        public Vector2 Velocity => _velocity;
+        public Vector2 CurrentNormal => _currentNormal;
+        private Vector2 Position => transform.position + _colliderOffset;
 
         [SerializeField]
-        [Range(0.01f, 0.05f)]
+        [Range(0.01f, 0.1f)]
         protected float skinWidth = 0.01f;
         [SerializeField]
         [Range(0.001f, 0.1f)]
@@ -33,8 +36,8 @@ namespace net.fiveotwo.characterController
         private Vector3 _colliderOffset;
         private CollisionState _collisionState;
         private Bounds _boundingBox;
-
-        private Vector2 Position => transform.position + _colliderOffset;
+        private Vector2 _velocity;
+        private Vector2 _currentNormal;
 
         protected void Awake()
         {
@@ -68,40 +71,41 @@ namespace net.fiveotwo.characterController
 
         private float CastLength(float value)
         {
-            if (Mathf.Abs(value) < skinWidth)
-            {
-                return 2 * skinWidth;
-            }
+            value = Math.Abs(value);
+
             return value + skinWidth;
         }
 
         private RaycastHit2D VerticalCast(float length, Bounds boundingBox)
         {
             float direction = Mathf.Sign(length);
-            float castLength = CastLength(Mathf.Abs(length) + (skinWidth * direction));
+            float castLength = CastLength(length);
 
             return Cast(Position + new Vector2(0, skinWidth * direction), boundingBox.size, Vector2.up * direction, castLength, solidMask);
         }
 
         private void VerticalCollision(ref Vector3 deltaStep, Bounds boundingBox)
         {
+            if (Mathf.Abs(deltaStep.y) < minimumMoveDistance)
+            {
+                deltaStep.y = 0;
+                return;
+            }
+
             float direction = Mathf.Sign(deltaStep.y);
-            RaycastHit2D hit = VerticalCast(deltaStep.y, boundingBox);
+            RaycastHit2D hit = VerticalCast(deltaStep.y * 2f, boundingBox);
             if (hit)
             {
-                float distance = hit.distance * direction;
-                float compensatedDistance = distance - skinWidth * direction;
-                if (Mathf.Abs(compensatedDistance) < minimumMoveDistance)
-                {
-                    deltaStep.y = 0;
-                }
-
-                deltaStep.y = compensatedDistance;
+                float distance =  hit.distance - skinWidth;
+                float compensatedDistance = distance * direction;
 
                 if (_collisionState.IsAscendingSlope)
                 {
                     deltaStep.x = deltaStep.y / Mathf.Tan(_collisionState.SlopeAngle * Mathf.Deg2Rad) * Mathf.Sign(deltaStep.x);
                 }
+
+                deltaStep.y = compensatedDistance;
+                _currentNormal = hit.normal;
 
                 _collisionState.Above = direction > 0;
                 _collisionState.Below = direction < 0;
@@ -111,9 +115,16 @@ namespace net.fiveotwo.characterController
 
         private void HorizontalCollision(ref Vector3 deltaStep, Bounds boundingBox)
         {
+            if (Mathf.Abs(deltaStep.x) < minimumMoveDistance)
+            {
+                deltaStep.x = 0;
+                return;
+            }
+
             float direction = Mathf.Sign(deltaStep.x);
-            float castLength = CastLength(Mathf.Abs(deltaStep.x) + skinWidth);
-            RaycastHit2D hit = Cast(Position, boundingBox.size, Vector2.right * direction, castLength, solidMask);
+            float castLength = CastLength(deltaStep.x * 2f);
+
+            RaycastHit2D hit = Cast(Position + new Vector2(skinWidth * direction, 0), boundingBox.size, Vector2.right * direction, castLength, solidMask);
 
             if (hit)
             {
@@ -125,15 +136,11 @@ namespace net.fiveotwo.characterController
                         Climb(ref deltaStep, angle);
                     }
                 }
-                float distance = hit.distance * direction;
-                float compensatedDistance = distance - skinWidth * direction;
-
-                if (Mathf.Abs(compensatedDistance) < minimumMoveDistance)
-                {
-                    deltaStep.x = 0;
-                }
+                float distance = hit.distance - skinWidth;
+                float compensatedDistance = distance * direction;
 
                 deltaStep.x = compensatedDistance;
+                _currentNormal = hit.normal;
 
                 if (!_collisionState.IsAscendingSlope)
                 {
@@ -187,6 +194,8 @@ namespace net.fiveotwo.characterController
         public void Move(Vector3 deltaStep)
         {
             _collisionState.Reset();
+            _currentNormal = Vector2.zero;
+            _velocity = deltaStep;
 
             if (deltaStep.y < 0)
             {
@@ -204,13 +213,17 @@ namespace net.fiveotwo.characterController
 
             if (Math.Abs(deltaStep.y) > Mathf.Epsilon)
             {
-                float previousVerticalSpeed = deltaStep.y;
                 VerticalCollision(ref deltaStep, _boundingBox);
                 if (_collisionState.IsAscendingSlope)
                 {
                     transform.Translate(Vector2.right * deltaStep);
                 }
                 transform.Translate(Vector2.up * deltaStep);
+            }
+
+            if (Time.deltaTime > Mathf.Epsilon)
+            {
+                _velocity = deltaStep / Time.deltaTime;
             }
 
             if (logCollisions)
@@ -227,7 +240,6 @@ namespace net.fiveotwo.characterController
         private void UpdateCollisionBoundaries()
         {
             _boundingBox = new Bounds(Vector3.zero, _collider2D.bounds.size);
-            _boundingBox.Expand(-2f * skinWidth);
             _colliderOffset = _collider2D.offset;
         }
 
