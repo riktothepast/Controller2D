@@ -93,7 +93,7 @@ namespace net.fiveotwo.characterController
             }
 
             float direction = Mathf.Sign(deltaStep.y);
-            RaycastHit2D hit = VerticalCast(deltaStep.y * 2f, boundingBox);
+            RaycastHit2D hit = VerticalCast(deltaStep.y, boundingBox);
             if (hit)
             {
                 float distance =  hit.distance - skinWidth;
@@ -122,7 +122,7 @@ namespace net.fiveotwo.characterController
             }
 
             float direction = Mathf.Sign(deltaStep.x);
-            float castLength = CastLength(deltaStep.x * 2f);
+            float castLength = CastLength(deltaStep.x);
 
             RaycastHit2D hit = Cast(Position + new Vector2(skinWidth * direction, 0), boundingBox.size, Vector2.right * direction, castLength, solidMask);
 
