@@ -237,7 +237,7 @@ namespace net.fiveotwo.characterController
             return _collisionState;
         }
 
-        private void UpdateCollisionBoundaries()
+        public void UpdateCollisionBoundaries()
         {
             _boundingBox = new Bounds(Vector3.zero, _collider2D.bounds.size);
             _colliderOffset = _collider2D.offset;
