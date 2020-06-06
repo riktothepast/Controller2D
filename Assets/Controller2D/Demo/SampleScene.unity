@@ -485,14 +485,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2209e09cac724944845529628ac6bda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skinWidth: 0.01
+  skinWidth: 0.03
   minimumMoveDistance: 0.001
   solidMask:
     serializedVersion: 2
     m_Bits: 256
   manageSlopes: 1
   maxSlopeAngle: 45
-  logCollisions: 0
+  logCollisions: 1
 --- !u!114 &272769753
 MonoBehaviour:
   m_ObjectHideFlags: 0
