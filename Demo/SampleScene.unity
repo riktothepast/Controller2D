@@ -485,7 +485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2209e09cac724944845529628ac6bda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skinWidth: 0.0386
+  skinWidth: 0.01
   minimumMoveDistance: 0.001
   solidMask:
     serializedVersion: 2
