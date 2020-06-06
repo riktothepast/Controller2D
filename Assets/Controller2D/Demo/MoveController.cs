@@ -21,11 +21,17 @@ public class MoveController : MonoBehaviour
     {
         _controller2D = GetComponent<Controller2D>();
         _controller2D.onTriggerEnter += OnTriggerEnter2D;
+        _controller2D.onCollisionEvent += OnCollisionEvent;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Destroy(collision.gameObject);
+    }
+
+    private void OnCollisionEvent(RaycastHit2D hit)
+    {
+        // do something with the hit
     }
 
     private void Update()
