@@ -12,10 +12,9 @@ namespace net.fiveotwo.characterController
         public CollisionEvent onCollisionEvent;
         public Vector2 Velocity { get; private set; }
         public Vector2 CurrentNormal { get; private set; }
-        private Vector2 Position => transform.position + _colliderOffset;
+        private Vector2 Position => transform.localPosition + _colliderOffset;
 
         [SerializeField]
-        [Range(0.01f, 1f)]
         protected float skinWidth = 0.01f;
         [SerializeField]
         [Range(0.001f, 0.5f)]
@@ -33,8 +32,6 @@ namespace net.fiveotwo.characterController
         protected bool debugDraw;
 
         private Collider2D _collider2D;
-        private CapsuleDirection2D _capsuleDirection2D;
-        private bool _isCapsuleCollider;
         private Vector3 _colliderOffset;
         private CollisionState _collisionState;
         private Bounds _boundingBox;
@@ -47,11 +44,6 @@ namespace net.fiveotwo.characterController
         protected void Awake()
         {
             _collider2D = GetComponent<Collider2D>();
-            _isCapsuleCollider = (_collider2D.GetType() == typeof(CapsuleCollider2D));
-            if (_isCapsuleCollider)
-            {
-                _capsuleDirection2D = ((CapsuleCollider2D)_collider2D).direction;
-            }
             _collisionState = new CollisionState();
             _collisionState.Reset();
             UpdateCollisionBoundaries();
@@ -62,19 +54,17 @@ namespace net.fiveotwo.characterController
             if (debugDraw)
             {
                 Vector2 compensatedOrigin = new Vector2(origin.x - size.x * 0.5f, origin.y + size.y * 0.5f);
-                DebugDrawRectangle(compensatedOrigin, size, Math.Abs(angle) > Mathf.Epsilon ? Color.yellow : Color.red, debugDraw);
-                DebugDrawRectangle(compensatedOrigin + direction * distance, size, Math.Abs(angle) > Mathf.Epsilon ? Color.yellow : Color.red, debugDraw);
+                DebugDrawRectangle(compensatedOrigin, size, Color.green, debugDraw);
+                DebugDrawRectangle(compensatedOrigin + direction * distance, size, Color.magenta, debugDraw);
             }
-            _raycastHits = _isCapsuleCollider ?
-                Physics2D.CapsuleCastNonAlloc(origin, size, _capsuleDirection2D, angle, direction, _hits, distance, mask) :
-                Physics2D.BoxCastNonAlloc(origin, size, angle, direction, _hits, distance, mask);
+            _raycastHits = Physics2D.BoxCastNonAlloc(origin, size, angle, direction, _hits, distance, mask);
 
             if (_raycastHits > 0)
             {
                 if (debugDraw)
                 {
                     Vector2 newOrigin = new Vector2(_hits[0].centroid.x - size.x * 0.5f, _hits[0].centroid.y + size.y * 0.5f);
-                    DebugDrawRectangle(newOrigin, size, Math.Abs(angle) > Mathf.Epsilon ? Color.green : Color.cyan, debugDraw);
+                    DebugDrawRectangle(newOrigin, size, Color.red, debugDraw);
                 }
                 return _hits[0];
             }
@@ -176,8 +166,7 @@ namespace net.fiveotwo.characterController
                 _collisionState.Below = _collisionState.IsAscendingSlope = true;
                 _collisionState.SlopeAngle = slopeAngle;
             } else {
-                deltaStep.y = hit.Value.distance - skinWidth;
-                deltaStep.x = hit.Value.distance - skinWidth;
+                deltaStep.x = (hit.Value.distance - (skinWidth * 2f)) * direction;
             }
         }
 
@@ -185,7 +174,7 @@ namespace net.fiveotwo.characterController
         {
             float moveDistance = Mathf.Abs(deltaStep.x);
             float directionX = Mathf.Sign(deltaStep.x);
-            _verticalHit = VerticalCast(-moveDistance, _boundingBox);
+            _verticalHit = VerticalCast(-Mathf.Infinity, _boundingBox);
 
             if (_verticalHit.HasValue)
             {
