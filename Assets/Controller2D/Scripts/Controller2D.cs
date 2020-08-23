@@ -15,12 +15,15 @@ namespace net.fiveotwo.characterController
         private Vector2 Position => transform.localPosition + _colliderOffset;
 
         [SerializeField]
+        [Range(0.01f, 0.5f)]
         protected float skinWidth = 0.01f;
         [SerializeField]
         [Range(0.001f, 0.5f)]
         protected float minimumMoveDistance = 0.001f;
         [SerializeField]
         protected LayerMask solidMask;
+        [SerializeField]
+        protected LayerMask triggerMask;
         [SerializeField]
         protected bool manageSlopes;
         [SerializeField]
@@ -41,12 +44,24 @@ namespace net.fiveotwo.characterController
         private Vector3 _displacementVector;
         private int _raycastHits;
 
+        private void IgnoreLayers()
+        {
+            for (int layerIndex = 0; layerIndex < 32; layerIndex++)
+            {
+                if ((triggerMask.value & 1 << layerIndex) == 0)
+                {
+                    Physics2D.IgnoreLayerCollision(gameObject.layer, layerIndex);
+                }
+            }
+        }
+
         protected void Awake()
         {
             _collider2D = GetComponent<Collider2D>();
             _collisionState = new CollisionState();
             _collisionState.Reset();
             UpdateCollisionBoundaries();
+            IgnoreLayers();
         }
 
         private RaycastHit2D? Cast(Vector2 origin, Vector2 size, Vector2 direction, float distance, LayerMask mask, float angle = 0)
@@ -54,8 +69,8 @@ namespace net.fiveotwo.characterController
             if (debugDraw)
             {
                 Vector2 compensatedOrigin = new Vector2(origin.x - size.x * 0.5f, origin.y + size.y * 0.5f);
-                DebugDrawRectangle(compensatedOrigin, size, Color.green, debugDraw);
-                DebugDrawRectangle(compensatedOrigin + direction * distance, size, Color.magenta, debugDraw);
+                DebugDrawRectangle(compensatedOrigin, size, Color.blue, debugDraw);
+                DebugDrawRectangle(compensatedOrigin + direction * distance, size, Color.blue, debugDraw);
             }
             _raycastHits = Physics2D.BoxCastNonAlloc(origin, size, angle, direction, _hits, distance, mask);
 
@@ -137,7 +152,8 @@ namespace net.fiveotwo.characterController
                 if (manageSlopes && angle > 0 && angle <= maxSlopeAngle)
                 {
                     Climb(ref deltaStep, angle, _horizontalHit);
-                } else {
+                } else
+                {
                     deltaStep.x = compensatedDistance;
                 }
 
@@ -159,13 +175,14 @@ namespace net.fiveotwo.characterController
             float radAngle = slopeAngle * Mathf.Deg2Rad;
             float climbSpeed = Mathf.Sin(radAngle) * (moveDistance);
 
-            if (deltaStep.y < climbSpeed)
+            if (deltaStep.y <= climbSpeed)
             {
                 deltaStep.y = climbSpeed;
                 deltaStep.x = Mathf.Cos(radAngle) * moveDistance * direction;
                 _collisionState.Below = _collisionState.IsAscendingSlope = true;
                 _collisionState.SlopeAngle = slopeAngle;
-            } else {
+            } else
+            {
                 deltaStep.x = (hit.Value.distance - (skinWidth * 2f)) * direction;
             }
         }
