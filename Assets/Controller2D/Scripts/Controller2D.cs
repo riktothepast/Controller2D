@@ -246,6 +246,11 @@ namespace net.fiveotwo.characterController
             _colliderOffset = _collider2D.offset;
         }
 
+        public void ChangeCollisionLayers(LayerMask mask)
+        {
+            solidMask = mask;
+        }
+
         private static void DebugDrawRectangle(Vector3 position, Vector2 size, Color color)
         {
             Debug.DrawLine(position, new Vector3(position.x + size.x, position.y, position.z), color);
