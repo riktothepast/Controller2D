@@ -276,6 +276,11 @@ namespace net.fiveotwo.characterController
             _lastVerticalPoint = transform.position.y;
         }
 
+        public void RestoreOneWayPlatforms()
+        {
+            _ignoreOneWayPlatforms = false;
+        }
+
         public void UpdateCollisionBoundaries()
         {
             _boundingBox = new Bounds(Vector3.zero, _collider2D.bounds.size);
