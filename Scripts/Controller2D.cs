@@ -91,7 +91,7 @@ namespace net.fiveotwo.characterController
             Vector2 size = boundingBox.size;
             size.y *= skinWidth;
             float adjustedPosition = boundingBox.extents.y - skinWidth * 2f;
-            Vector2 position = new(0, (adjustedPosition * direction) + skinWidth * direction);
+            Vector2 position = new Vector2(0, (adjustedPosition * direction) + skinWidth * direction);
 
             return Cast(Position + position, size, Vector2.up * direction, castLength, currentMask);
         }
@@ -139,7 +139,7 @@ namespace net.fiveotwo.characterController
             Vector2 size = boundingBox.size;
             size.x *= skinWidth;
             float adjustedPosition = boundingBox.extents.x - skinWidth;
-            Vector2 position = new((adjustedPosition * direction) + skinWidth * direction, 0);
+            Vector2 position = new Vector2((adjustedPosition * direction) + skinWidth * direction, 0);
 
             RaycastHit2D? hit = Cast(Position + position, size, Vector2.right * direction, castLength, solidMask);
 
