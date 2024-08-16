@@ -566,6 +566,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skinWidth: 0.08
+  oneWayThresholdCheck: 0.2
   minimumMoveDistance: 0.001
   solidMask:
     serializedVersion: 2
