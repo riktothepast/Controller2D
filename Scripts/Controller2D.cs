@@ -15,7 +15,7 @@ namespace net.fiveotwo.characterController
         private Vector2 Position => transform.position + _colliderOffset;
 
         [SerializeField]
-        [Range(0.01f, 1f)]
+        [Range(0.01f, 0.5f)]
         protected float skinWidth = 0.01f;
         [SerializeField]
         [Range(0.001f, 0.5f)]
@@ -138,7 +138,7 @@ namespace net.fiveotwo.characterController
 
             Vector2 size = boundingBox.size;
             size.x *= skinWidth;
-            float adjustedPosition = boundingBox.extents.x - skinWidth;
+            float adjustedPosition = boundingBox.extents.x - skinWidth * 2f;
             Vector2 position = new Vector2((adjustedPosition * direction) + skinWidth * direction, 0);
 
             RaycastHit2D? hit = Cast(Position + position, size, Vector2.right * direction, castLength, solidMask);
@@ -250,7 +250,7 @@ namespace net.fiveotwo.characterController
 
             if (_ignoreOneWayPlatforms)
             {
-                if (Mathf.Abs(transform.position.y - _lastVerticalPoint) < skinWidth * 2f)
+                if (Mathf.Abs(_lastVerticalPoint - transform.position.y) < skinWidth * 2.5f)
                 {
                     return;
                 }
