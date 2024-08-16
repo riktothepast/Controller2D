@@ -34,7 +34,7 @@ public class MoveController : MonoBehaviour
         _velocity.x = Mathf.Lerp(_velocity.x, Input.GetAxis("Horizontal") * movementSpeed, Time.deltaTime * damping);
         _velocity.y -= gravity * Time.deltaTime;
         _controller2D.Move(_velocity * Time.deltaTime);
-        if (_controller2D.CollisionState().Below)
+        if (_controller2D.CollisionState().Below || _controller2D.CollisionState().Above)
         {
             _velocity.y = 0;
         }
@@ -45,11 +45,20 @@ public class MoveController : MonoBehaviour
         if (_controller2D.CollisionState().Below && Input.GetKeyDown(KeyCode.Space))
         {
             Jump();
+        } else if (_controller2D.CollisionState().Below && Input.GetAxis("Vertical") < 0f)
+        {
+            FallFromPlatform();
         }
     }
 
     private void Jump()
     {
         _velocity.y = Mathf.Sqrt(2f * jumpHeight * gravity);
+    }
+
+    private void FallFromPlatform()
+    {
+        _controller2D.IgnoreOneWayPlatforms();
+        _velocity.y = -1f;
     }
 }
