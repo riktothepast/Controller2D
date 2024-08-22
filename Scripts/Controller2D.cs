@@ -90,7 +90,14 @@ namespace net.fiveotwo.characterController
         {
             float direction = Mathf.Sign(length);
             float castLength = CastLength(length);
-            LayerMask currentMask = ignoreOneWayPlatforms ? solidMask : solidMask + oneWayMask;
+            LayerMask currentMask;
+            if (ignoreOneWayPlatforms) // changes ternary to solve CS0172: Type of conditional expression cannot be determined because 'LayerMask' and 'int' implicitly convert to one another
+            {
+                currentMask = solidMask;
+            }
+            else {
+                currentMask = solidMask + oneWayMask;
+            }
             Vector2 size = boundingBox.size;
             size.y *= skinWidth;
             float adjustedPosition = boundingBox.extents.y - skinWidth * 2f;
